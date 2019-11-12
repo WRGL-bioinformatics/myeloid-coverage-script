@@ -3,6 +3,7 @@ import xlsxwriter
 from pathlib import Path
 from ExcelGenes import genedict
 from ExcelGenes import boldgenes
+from bin.Config import config
 
 
 class ExcelFormatter(object):
@@ -31,12 +32,40 @@ class ExcelFormatter(object):
             self.outputpath / "{}_Coverage.xlsx".format(self.runid)
         )
 
+        # Write the summary/cover sheet
+        self.write_summary()
+
         # Loop through each sample in the dict
-        for sample in self.outputdict.keys():
+        for sample in sorted(self.outputdict.keys()):
             sampleid = Path(sample).parts[-1].split("_")[0]
             self.write_sample(sample, sampleid)
 
         self.workbook.close()
+
+    def write_summary(self):
+        """
+        Writes a cover sheet for the workbook, summarising some key metadata that
+        can't be included on the individual sample pages
+        """
+        worksheet = self.workbook.add_worksheet("Summary")
+        worksheet.write(1, 1, "Myeloid panel coverage summary", self.workbook.add_format({"bold": True, "font_size": 14}))
+        worksheet.write(3, 1, self.runid, self.workbook.add_format({"bold": True}))
+        worksheet.write(5, 1, "Samples", self.workbook.add_format({"bold": True, "border": 1}))
+        for index, sample in enumerate(sorted(self.outputdict.keys())):
+            worksheet.write(index + 6, 1,Path(sample).parts[-1].split("_")[0], self.workbook.add_format({"border": 1}))
+
+        worksheet.write(5, 3, "Minimum depth", self.workbook.add_format({"bold": True, "border": 1}))
+        worksheet.write(6, 3, "{}x".format(config.get("coverage", "mindepth")), self.workbook.add_format({"bold": True, "color": "red", "border": 1}))
+
+        # move the support footer line to just below the sample list, regardless of 
+        # how many samples are used
+        worksheet.write(len(self.outputdict.keys())+10, 1, "WRGL software 2019.  Contact Ben.Sanders@NHS.net for support", self.workbook.add_format({"color": "gray"}))
+
+        # Adjust column widths to fit the data nicely
+        worksheet.set_column(1, 1, 20)
+        worksheet.set_column(2, 2, 10)
+        worksheet.set_column(3, 3, 20)
+        worksheet.set_row(1, 30)
 
     def write_sample(self, sample: str, sampleid: str):
         """

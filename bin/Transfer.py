@@ -25,6 +25,8 @@ from bin.Config import config
 class MyeloidTransfer(object):
     def __init__(self):
         # Get the run folder and target folder
+        print("INFO: Default source directory: {}".format(config.get("directories", "source-dir")))
+        print("INFO: Default target directory: {}".format(config.get("directories", "target-dir")))
         datadir, targetdir = self.get_details_tk()
         self.newdatadir = self.transfer_files(datadir, targetdir)
 
