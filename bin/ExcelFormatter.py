@@ -80,11 +80,11 @@ class ExcelFormatter(object):
         header_format = self.workbook.add_format(
             {"bold": True, "text_wrap": True, "border": 1}
         )
-        gene_format = self.workbook.add_format({"italic": True, "border": 1, "num_format": "0.00%"})
+        gene_format = self.workbook.add_format({"italic": True, "border": 1})
         gene_bold_format = self.workbook.add_format(
-            {"italic": True, "bold": True, "border": 1, "num_format": "0.00%"}
+            {"italic": True, "bold": True, "border": 1}
         )
-        other_format = self.workbook.add_format({"border": 1})
+        other_format = self.workbook.add_format({"border": 1,  "num_format": "0.00%"})
 
         # Add each panel starting at the position defined in the ExcelGenes.py dictionary.
         for panel in genedict.keys():

@@ -127,6 +127,10 @@ class MyeloidTransfer(object):
             sys.exit(1)
 
         # Select the destination folder
+        # if this filepicker is cancelled, targetdir seems to get the script directory.
+        # This isn't what I want, so hopefully this will solve it and it will default
+        # to the target directory from config.
+        targetdir = config.get("directories", "target-dir")
         root.filename = filedialog.askdirectory(
             title="Select destination",
             initialdir=config.get("directories", "target-dir"),
