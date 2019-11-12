@@ -74,13 +74,18 @@ class MyeloidTransfer(object):
             )
             sys.exit(1)
 
-        # Copy the necessary files
+        # TODO
+        # DEV:
+        # Copy the fastqs and the remaining folders so that the new data directory is
+        # more in line with the setup of the panels and genotyping folder
+
+        # Now we can add a Myeloid_panel folder for the remaining files, to match the
+        # structure of panels and genotyping
+        newdatadir = newdatadir / "Myeloid_1.0"
         # Use the list of file types in the config file and glob all matching
         # files in the data directory, then use shutil.copyfile to copy (NOT move)
         # to the target directory (newdatadir)
         for filetype in config["directories"].getlist("filetypes"):
-
-            # for filetype in config.getlist("directories", "filetypes"):
             for f in datadir.glob(filetype):
                 print("INFO: Moving {}".format(f.name), file=sys.stderr)
                 newfile = newdatadir / f.name
