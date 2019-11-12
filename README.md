@@ -31,9 +31,9 @@ folder and accessed by the executable from the dist folder, rather than packaged
 This means that the config settings can now be edited by the user from this file.
 
 If you make any changes, the executable will need to be rebuilt. This is simple using the
-spec file, just run
+spec file, just run (to use the venv python)
 
-`pyinstaller --clean MyeloidTransfer.spec`
+`python -m PyInstaller --clean MyeloidTransfer.spec`
 
 ### Distribution
 
