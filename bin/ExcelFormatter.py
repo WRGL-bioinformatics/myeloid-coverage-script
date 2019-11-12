@@ -80,9 +80,9 @@ class ExcelFormatter(object):
         header_format = self.workbook.add_format(
             {"bold": True, "text_wrap": True, "border": 1}
         )
-        gene_format = self.workbook.add_format({"italic": True, "border": 1})
+        gene_format = self.workbook.add_format({"italic": True, "border": 1, "num_format": "0.00%"})
         gene_bold_format = self.workbook.add_format(
-            {"italic": True, "bold": True, "border": 1}
+            {"italic": True, "bold": True, "border": 1, "num_format": "0.00%"}
         )
         other_format = self.workbook.add_format({"border": 1})
 
@@ -111,7 +111,8 @@ class ExcelFormatter(object):
                 # Calculate the percentage coverage for the current gene
                 length = self.outputdict[sample][gene][0]
                 covered = self.outputdict[sample][gene][1]
-                coverage = "{:.2f}%".format((covered / length) * 100)
+                #coverage = "{:.2f}%".format((covered / length) * 100)
+                coverage = covered / length
 
                 # Some genes should be highlighted in bold
                 # Check the list from ExcelGenes.py and change the format as appropriate
