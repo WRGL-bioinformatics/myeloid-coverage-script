@@ -16,7 +16,7 @@ import sys
 import tkinter as tk
 from tkinter import filedialog
 from pathlib import Path
-from shutil import copyfile
+from shutil import copyfile, copytree
 
 # config is shared across multiple classes, so we load it up in its own module
 # to avoid repetition of the config parsing code
@@ -60,16 +60,28 @@ class MyeloidTransfer(object):
         # there could be changes before
         runid = datadir.parts[-5]
 
+        # datadir is the alignment folder
+        # For some of this we will need the BaseCalls folder above it
+        basecallsdir = datadir.parent
+        # And for some we will need the root run folder
+        rundir = basecallsdir.parent.parent.parent
+
         # Create new folder in the target directory
-        newdatadir = (
-            targetdir / runid / "Myeloid_{}".format(config.get("general", "version"))
-        )
+        newrundir = targetdir / runid
+        # this is the folder to hold the bams/vcfs
+        newdatadir = newrundir / "Myeloid_{}".format(config.get("general", "version"))
+        # For Fastq backup
+        newfastqdir = newrundir / "Data" / "Intensities" / "BaseCalls"
+        # non-BAM/VCF files from the Alignment folder
+        newalignmentdir = newfastqdir / "Alignment"
+
         print("INFO: Creating new folder {}".format(newdatadir), file=sys.stderr)
 
         # Try to create the new runfolder
         # Don't overwrite an existing folder - print a message and exit
         try:
             newdatadir.mkdir(parents=True)
+            newalignmentdir.mkdir(parents=True)
         except FileExistsError:
             print(
                 "ERROR: The run folder {} already exists".format(newdatadir),
@@ -85,14 +97,6 @@ class MyeloidTransfer(object):
             )
             sys.exit(1)
 
-        # TODO
-        # DEV:
-        # Copy the fastqs and the remaining folders so that the new data directory is
-        # more in line with the setup of the panels and genotyping folder
-
-        # Now we can add a Myeloid_panel folder for the remaining files, to match the
-        # structure of panels and genotyping
-        newdatadir = newdatadir
         # Use the list of file types in the config file and glob all matching
         # files in the data directory, then use shutil.copyfile to copy (NOT move)
         # to the target directory (newdatadir)
@@ -109,13 +113,56 @@ class MyeloidTransfer(object):
 
         # Copy the Sample Sheet and the AmpliconCoverage file
         # DEV: As above, this could go wrong in a few ways. Once these are known, add handlers
+        # These should also go to the new alignment folder
         copyfile(
-            datadir / "SampleSheetUsed.csv", newdatadir.parent / "SampleSheetUsed.csv"
+            datadir / "SampleSheetUsed.csv",
+            newrundir / "SampleSheetUsed.csv"
+        )
+        copyfile(
+            datadir / "SampleSheetUsed.csv",
+            newalignmentdir / "SampleSheetUsed.csv"
         )
         copyfile(
             datadir / "AmpliconCoverage_M1.tsv",
-            newdatadir.parent / "AmpliconCoverage_M1.tsv",
+            newrundir / "AmpliconCoverage_M1.tsv",
         )
+        copyfile(
+            datadir / "AmpliconCoverage_M1.tsv",
+            newalignmentdir / "AmpliconCoverage_M1.tsv",
+        )
+        copyfile(
+            datadir / "DemultiplexSummaryF1L1.txt",
+            newrundir / "DemultiplexSummaryF1L1.txt",
+        )
+        copyfile(
+            datadir / "DemultiplexSummaryF1L1.txt",
+            newalignmentdir / "DemultiplexSummaryF1L1.txt",
+        )
+        # There are also a couple of MiSeq files that need to be moved (to match
+        # panels, I'm not sure if they're essential for repeating this)
+        copyfile(
+            rundir / "RunInfo.xml",
+            newrundir / "RunInfo.xml"
+        )
+        copyfile(
+            rundir / "RunParameters.xml",
+            newrundir / "RunParameters.xml"
+        )
+
+        # Copy the InterOp folder to the backup drive
+        # To copy a folder and it's files & subfolders, use shutil copytree()
+        copytree(rundir / 'InterOp', newrundir / 'InterOp')
+
+        # TODO
+        # Copy the fastqs and the remaining folders so that the new data directory is
+        # more in line with the setup of the panels and genotyping folder
+        # Create the Data directory regardless of fast copying
+        if config.getboolean("general", "copy_fastqs") == True:
+            print("INFO: Copying fastq files in {}".format(basecallsdir), file=sys.stderr)
+            for f in basecallsdir.glob('*.gz'):
+                print("INFO: Moving {}".format(f.name), file=sys.stderr)
+                newfile = newfastqdir / f.name
+                copyfile(f, newfile)
 
         # Return the new run data, so we can then use that to call the coverage module
         return newdatadir
