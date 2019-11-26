@@ -8,7 +8,8 @@ purpose
 -------
 
 Allow the user to select a run folder containing a myeloid
-sequencing run, then 
+sequencing run, then a  target directory, then copy files from 
+the sequencing run to the backup directory.
 
 """
 import sys
@@ -25,8 +26,16 @@ from bin.Config import config
 class MyeloidTransfer(object):
     def __init__(self):
         # Get the run folder and target folder
-        print("INFO: Default source directory: {}".format(config.get("directories", "source-dir")))
-        print("INFO: Default target directory: {}".format(config.get("directories", "target-dir")))
+        print(
+            "INFO: Default source directory: {}".format(
+                config.get("directories", "source-dir")
+            )
+        )
+        print(
+            "INFO: Default target directory: {}".format(
+                config.get("directories", "target-dir")
+            )
+        )
         datadir, targetdir = self.get_details_tk()
         self.newdatadir = self.transfer_files(datadir, targetdir)
 
@@ -35,7 +44,7 @@ class MyeloidTransfer(object):
         """Return the new data directory target for copying"""
         return self.newdatadir
 
-    def transfer_files(self, datadir: str, targetdir: str) -> str:
+    def transfer_files(self, datadir: Path, targetdir: Path) -> str:
         """
         Transfer the essential run files from the MiSeq run data folder to the
         backup target folder.
@@ -52,13 +61,15 @@ class MyeloidTransfer(object):
         runid = datadir.parts[-5]
 
         # Create new folder in the target directory
-        newdatadir = targetdir / runid
+        newdatadir = (
+            targetdir / runid / "Myeloid_{}".format(config.get("general", "version"))
+        )
         print("INFO: Creating new folder {}".format(newdatadir), file=sys.stderr)
 
         # Try to create the new runfolder
         # Don't overwrite an existing folder - print a message and exit
         try:
-            newdatadir.mkdir()
+            newdatadir.mkdir(parents=True)
         except FileExistsError:
             print(
                 "ERROR: The run folder {} already exists".format(newdatadir),
@@ -81,7 +92,7 @@ class MyeloidTransfer(object):
 
         # Now we can add a Myeloid_panel folder for the remaining files, to match the
         # structure of panels and genotyping
-        newdatadir = newdatadir / "Myeloid_1.0"
+        newdatadir = newdatadir
         # Use the list of file types in the config file and glob all matching
         # files in the data directory, then use shutil.copyfile to copy (NOT move)
         # to the target directory (newdatadir)
@@ -90,11 +101,21 @@ class MyeloidTransfer(object):
                 print("INFO: Moving {}".format(f.name), file=sys.stderr)
                 newfile = newdatadir / f.name
 
-                # I don't know all the ways in which this might go wrong, so I'll rely on it
+                # DEV: I don't know all the ways in which this might go wrong, so I'll rely on it
                 # just dying and raising an exception. I doubt I will want to handle them any
                 # other way than just exiting, but I might want to add a more friendly error
                 # message.
                 copyfile(f, newfile)
+
+        # Copy the Sample Sheet and the AmpliconCoverage file
+        # DEV: As above, this could go wrong in a few ways. Once these are known, add handlers
+        copyfile(
+            datadir / "SampleSheetUsed.csv", newdatadir.parent / "SampleSheetUsed.csv"
+        )
+        copyfile(
+            datadir / "AmpliconCoverage_M1.tsv",
+            newdatadir.parent / "AmpliconCoverage_M1.tsv",
+        )
 
         # Return the new run data, so we can then use that to call the coverage module
         return newdatadir
