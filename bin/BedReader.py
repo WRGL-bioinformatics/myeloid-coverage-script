@@ -78,16 +78,16 @@ class BedReader(object):
                         line = (CHR, START, END, NAME)
                     except IndexError:
                         line = (CHR, START, END, "{}:{}-{}".format(CHR, START, END))
-                    
+
                     # Add to the BED file list
                     bedfile.append(line)
-        
+
         # A BED file is required, so if it can't be opened quit.
         except FileNotFoundError:
             print(
                 "ERROR: Could not open essential file {}".format(self.fname),
                 file=sys.stderr,
             )
-            exit(1)
+            sys.exit(1)
 
         return bedfile
