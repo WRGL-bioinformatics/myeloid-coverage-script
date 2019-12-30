@@ -149,6 +149,11 @@ class MyeloidTransfer(object):
             newrundir / "RunParameters.xml"
         )
 
+        copyfile(
+            rundir / "TruSight-Myeloid-Manifest.txt",
+            newrundir / "TruSight-Myeloid-Manifest.txt"
+        )
+
         # Copy the InterOp folder to the backup drive
         # To copy a folder and it's files & subfolders, use shutil copytree()
         copytree(rundir / 'InterOp', newrundir / 'InterOp')
