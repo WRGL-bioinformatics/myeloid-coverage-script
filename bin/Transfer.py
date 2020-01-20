@@ -114,17 +114,12 @@ class MyeloidTransfer(object):
         # Copy the Sample Sheet and the AmpliconCoverage file
         # DEV: As above, this could go wrong in a few ways. Once these are known, add handlers
         # These should also go to the new alignment folder
+        copyfile(datadir / "SampleSheetUsed.csv", newrundir / "SampleSheetUsed.csv")
         copyfile(
-            datadir / "SampleSheetUsed.csv",
-            newrundir / "SampleSheetUsed.csv"
+            datadir / "SampleSheetUsed.csv", newalignmentdir / "SampleSheetUsed.csv"
         )
         copyfile(
-            datadir / "SampleSheetUsed.csv",
-            newalignmentdir / "SampleSheetUsed.csv"
-        )
-        copyfile(
-            datadir / "AmpliconCoverage_M1.tsv",
-            newrundir / "AmpliconCoverage_M1.tsv",
+            datadir / "AmpliconCoverage_M1.tsv", newrundir / "AmpliconCoverage_M1.tsv",
         )
         copyfile(
             datadir / "AmpliconCoverage_M1.tsv",
@@ -140,31 +135,27 @@ class MyeloidTransfer(object):
         )
         # There are also a couple of MiSeq files that need to be moved (to match
         # panels, I'm not sure if they're essential for repeating this)
-        copyfile(
-            rundir / "RunInfo.xml",
-            newrundir / "RunInfo.xml"
-        )
-        copyfile(
-            rundir / "RunParameters.xml",
-            newrundir / "RunParameters.xml"
-        )
+        copyfile(rundir / "RunInfo.xml", newrundir / "RunInfo.xml")
+        copyfile(rundir / "RunParameters.xml", newrundir / "RunParameters.xml")
 
         copyfile(
             rundir / "TruSight-Myeloid-Manifest.txt",
-            newrundir / "TruSight-Myeloid-Manifest.txt"
+            newrundir / "TruSight-Myeloid-Manifest.txt",
         )
 
         # Copy the InterOp folder to the backup drive
         # To copy a folder and it's files & subfolders, use shutil copytree()
-        copytree(rundir / 'InterOp', newrundir / 'InterOp')
+        copytree(rundir / "InterOp", newrundir / "InterOp")
 
         # TODO
         # Copy the fastqs and the remaining folders so that the new data directory is
         # more in line with the setup of the panels and genotyping folder
         # Create the Data directory regardless of fast copying
         if config.getboolean("general", "copy_fastqs") == True:
-            print("INFO: Copying fastq files in {}".format(basecallsdir), file=sys.stderr)
-            for f in basecallsdir.glob('*.gz'):
+            print(
+                "INFO: Copying fastq files in {}".format(basecallsdir), file=sys.stderr
+            )
+            for f in basecallsdir.glob("*.gz"):
                 print("INFO: Moving {}".format(f.name), file=sys.stderr)
                 newfile = newfastqdir / f.name
                 copyfile(f, newfile)
