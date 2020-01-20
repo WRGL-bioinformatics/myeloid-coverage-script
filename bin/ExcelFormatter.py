@@ -26,7 +26,7 @@ class ExcelFormatter(object):
         )
 
         # DEV
-        for panel in config['panels'].getlist('panels'):
+        for panel in config["panels"].getlist("panels"):
             print(panel, file=sys.stderr)
 
         # Create an empty Excel workbook in the output folder
@@ -113,7 +113,7 @@ class ExcelFormatter(object):
         other_format = self.workbook.add_format({"border": 1, "num_format": "0.00%"})
 
         # Add each panel starting at the position defined in the transfer.config file.
-        for panel in config['panels'].getlist('panels'):
+        for panel in config["panels"].getlist("panels"):
 
             # Create an offset so that we can start genes from the cell below thier
             # header. Include a check for headers not on row 1, as these are merged
@@ -142,7 +142,7 @@ class ExcelFormatter(object):
 
                 # Some genes should be highlighted in bold
                 # Check the list from transfer.config and change the format as appropriate
-                if gene in config['panels'].getlist('panels'):
+                if gene in config["panels"].getlist("panels"):
                     gene_fmt = gene_bold_format
                 else:
                     gene_fmt = gene_format
