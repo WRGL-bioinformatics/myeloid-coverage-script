@@ -25,10 +25,6 @@ class ExcelFormatter(object):
             file=sys.stderr,
         )
 
-        # DEV
-        for panel in config["panels"].getlist("panels"):
-            print(panel, file=sys.stderr)
-
         # Create an empty Excel workbook in the output folder
         self.workbook = xlsxwriter.Workbook(
             self.outputpath / "{}_Coverage.xlsx".format(self.runid)
