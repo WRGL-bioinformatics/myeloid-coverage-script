@@ -138,7 +138,7 @@ class ExcelFormatter(object):
 
                 # Some genes should be highlighted in bold
                 # Check the list from transfer.config and change the format as appropriate
-                if gene in config["panels"].getlist("panels"):
+                if gene in config["formatting"].getlist("bold"):
                     gene_fmt = gene_bold_format
                 else:
                     gene_fmt = gene_format
