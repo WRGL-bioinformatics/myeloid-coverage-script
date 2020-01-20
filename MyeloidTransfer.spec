@@ -34,4 +34,3 @@ exe = EXE(pyz,
 		  
 import shutil
 shutil.copyfile('transfer.config', '{0}/transfer.config'.format(DISTPATH))
-shutil.copyfile('ExcelGenes.py', '{0}/ExcelGenes.py'.format(DISTPATH))

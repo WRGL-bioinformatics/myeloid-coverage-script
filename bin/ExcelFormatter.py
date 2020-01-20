@@ -1,8 +1,6 @@
 import sys
 import xlsxwriter
 from pathlib import Path
-from ExcelGenes import genedict
-from ExcelGenes import boldgenes
 from bin.Config import config
 
 
@@ -26,6 +24,10 @@ class ExcelFormatter(object):
             "INFO: Creating coverage folder at {}".format(self.outputpath),
             file=sys.stderr,
         )
+
+        # DEV
+        for panel in config['panels'].getlist('panels'):
+            print(panel, file=sys.stderr)
 
         # Create an empty Excel workbook in the output folder
         self.workbook = xlsxwriter.Workbook(
@@ -110,28 +112,28 @@ class ExcelFormatter(object):
         )
         other_format = self.workbook.add_format({"border": 1, "num_format": "0.00%"})
 
-        # Add each panel starting at the position defined in the ExcelGenes.py dictionary.
-        for panel in genedict.keys():
+        # Add each panel starting at the position defined in the transfer.config file.
+        for panel in config['panels'].getlist('panels'):
 
             # Create an offset so that we can start genes from the cell below thier
             # header. Include a check for headers not on row 1, as these are merged
             # double height cells (no, I don't know why...)
             columnoffset = 1
             rowoffset = 0
-            if genedict[panel]["row"] != 0:
+            if config.getint(panel, "row") != 0:
                 rowoffset = 1
 
             worksheet.merge_range(
-                genedict[panel]["row"],
-                genedict[panel]["column"],
-                genedict[panel]["row"] + rowoffset,
-                genedict[panel]["column"] + columnoffset,
+                config.getint(panel, "row"),
+                config.getint(panel, "column"),
+                config.getint(panel, "row") + rowoffset,
+                config.getint(panel, "column") + columnoffset,
                 panel,
                 header_format,
             )
 
-            # now right the actual data
-            for index, gene in enumerate(genedict[panel]["genes"]):
+            # now write the actual data, for each panel as defined in transfer.config
+            for index, gene in enumerate(config[panel].getlist("genes")):
                 # Calculate the percentage coverage for the current gene
                 length = self.outputdict[sample][gene][0]
                 covered = self.outputdict[sample][gene][1]
@@ -139,8 +141,8 @@ class ExcelFormatter(object):
                 coverage = covered / length
 
                 # Some genes should be highlighted in bold
-                # Check the list from ExcelGenes.py and change the format as appropriate
-                if gene in boldgenes:
+                # Check the list from transfer.config and change the format as appropriate
+                if gene in config['panels'].getlist('panels'):
                     gene_fmt = gene_bold_format
                 else:
                     gene_fmt = gene_format
@@ -150,14 +152,14 @@ class ExcelFormatter(object):
                 # NOTE: gene_fmt rather than gene_format below to allow bold to be set
                 #       above.
                 worksheet.write(
-                    genedict[panel]["row"] + (index + 1 + rowoffset),
-                    genedict[panel]["column"],
+                    config.getint(panel, "row") + (index + 1 + rowoffset),
+                    config.getint(panel, "column"),
                     gene,
                     gene_fmt,
                 )
                 worksheet.write(
-                    genedict[panel]["row"] + (index + 1 + rowoffset),
-                    genedict[panel]["column"] + 1,
+                    config.getint(panel, "row") + (index + 1 + rowoffset),
+                    config.getint(panel, "column") + 1,
                     coverage,
                     other_format,
                 )
