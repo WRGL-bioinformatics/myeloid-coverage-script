@@ -12,17 +12,17 @@ class BedReader(object):
     """
     BED files are really quick and easy to read. This pulls each ROI out into a list of
     tuples representing (CHR, START, END, NAME). The positions of these fields are
-    fixed by the BED specification, so should not vary. 
+    fixed by the BED specification, so should not vary.
 
     WRGL name format is used, where the gene name is stored in the first section of an
     underscore (_) delimited list. Additional information can be provided after the gene
     name (e.g. exon number), but the format of this is NOT fixed and may vary depending
     on who made the BED file, when it was made, etc. For this script, everything after
-    the first underscore is discarded. Therefore, if you want to include additional 
+    the first underscore is discarded. Therefore, if you want to include additional
     information in the gene name (e.g. to report regions separately - see the hotspot
     regions in the Myeloid panel bed) the ROI names must be unique BEFORE the first
     underscore.
-    e.g. JAK2_hotspotV617F_1 and JAK2_exon1 will be merged into JAK2, while 
+    e.g. JAK2_hotspotV617F_1 and JAK2_exon1 will be merged into JAK2, while
          JAK2hotspotV617F_1 and JAK2_exon1 will be reported separately.
     """
 

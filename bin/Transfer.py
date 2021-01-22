@@ -24,7 +24,7 @@ from bin.Config import config
 
 
 class MyeloidTransfer(object):
-    def __init__(self):
+    def __init__(self, datadir: str = None):
         # Get the run folder and target folder
         print(
             "INFO: Default source directory: {}".format(
@@ -36,12 +36,20 @@ class MyeloidTransfer(object):
                 config.get("directories", "target-dir")
             )
         )
-        datadir, targetdir = self.get_details_tk()
+
+        # Get the folder details from the user
+        datadir, targetdir = self.get_details_tk(datadir)
+
+        # Run the data transfer to the network
         self.newdatadir = self.transfer_files(datadir, targetdir)
 
     @property
     def newdatadirectory(self):
-        """Return the new data directory target for copying"""
+        """
+        Return the new data directory target for copying
+
+        This needs to be available for the coverage report generation step.
+        """
         return self.newdatadir
 
     def transfer_files(self, datadir: Path, targetdir: Path) -> str:
@@ -119,7 +127,8 @@ class MyeloidTransfer(object):
             datadir / "SampleSheetUsed.csv", newalignmentdir / "SampleSheetUsed.csv"
         )
         copyfile(
-            datadir / "AmpliconCoverage_M1.tsv", newrundir / "AmpliconCoverage_M1.tsv",
+            datadir / "AmpliconCoverage_M1.tsv",
+            newrundir / "AmpliconCoverage_M1.tsv",
         )
         copyfile(
             datadir / "AmpliconCoverage_M1.tsv",
@@ -163,28 +172,41 @@ class MyeloidTransfer(object):
         # Return the new run data, so we can then use that to call the coverage module
         return newdatadir
 
-    def get_details_tk(self) -> tuple:
+    @staticmethod
+    def get_details_tk(datadir: str = None) -> tuple:
         """
-        Opens file picker dialogues from tkinter
+        Opens file picker dialogues from tkinter if there is no command line input.
+
+        Taret directory should be imputed from the run ID and the path set in the
+        config file, not using a second file picker.
         """
-        print("Trying to open file picker dialog...", file=sys.stderr)
-        root = tk.Tk()
 
-        # Select the source run folder
-        root.filename = filedialog.askdirectory(
-            title="Select run folder",
-            initialdir=config.get("directories", "source-dir"),
-        )
+        # If there is no datadir given, open a file picker to allow the user to
+        # to choose.
+        if datadir == None:
+            root = tk.Tk()
 
-        # If the dialogue is closed, the program will raise an exception and a confusing
-        # error. Instead, display a simple message and quit more gracefully.
-        try:
-            rootdir = Path(root.filename)
-        except TypeError:
-            print("ERROR: No run folder selected.", file=sys.stderr)
-            sys.exit(1)
+            # Select the source run folder
+            root.filename = filedialog.askdirectory(
+                title="Select run folder",
+                initialdir=config.get("directories", "source-dir"),
+            )
 
-        datadir = rootdir / "Data" / "Intensities" / "BaseCalls" / "Alignment"
+            # If the dialogue is closed, the program will raise an exception and a
+            # confusing error. Instead, display a simple message and quit more
+            # gracefully.
+            try:
+                rootdir = Path(root.filename)
+            except TypeError:
+                print("ERROR: No run folder selected.", file=sys.stderr)
+                sys.exit(1)
+
+            root.withdraw()
+
+            datadir = rootdir / "Data" / "Intensities" / "BaseCalls" / "Alignment"
+
+        # Ensure that the data directory is a Path object
+        datadir = Path(datadir)
 
         # Ensure that the Alignment folder exists within the run folder.
         # If it doesn't, the sequencing may not yet be complete.
@@ -195,30 +217,11 @@ class MyeloidTransfer(object):
             )
             sys.exit(1)
 
-        # Select the destination folder
-        # if this filepicker is cancelled, targetdir seems to get the script directory.
-        # This isn't what I want, so hopefully this will solve it and it will default
-        # to the target directory from config.
-        targetdir = config.get("directories", "target-dir")
-        root.filename = filedialog.askdirectory(
-            title="Select destination",
-            initialdir=config.get("directories", "target-dir"),
-        )
-        try:
-            targetdir = Path(root.filename)
-        except TypeError:
-            print("ERROR: No target folder selected.", file=sys.stderr)
-            sys.exit(1)
+        # Set the destination folder
+        networkdir = config.get("directories", "target-dir")
 
-        root.withdraw()
+        # DEV: Just for now return the defaults
+        targetdir = Path(networkdir)
 
         # Return the two paths
         return (datadir, targetdir)
-
-    def check_runfolder(self, path: str):
-        """
-        Check that the selected run folder appears to hold a myeloid panel run, not any
-        other type of run that should automatically transfer during the standard pipeline.
-        """
-        pass
-        # TODO

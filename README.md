@@ -9,6 +9,17 @@ network.
 
 ## Usage
 
+### Automated usage
+
+To run this automatically from the pipeline software (which will be run after MiSeq reporter is complete), it
+must accept a folder path from the command line. This should be the local folder, and the Z: drive path will be
+derived from the defaults. 
+
+**TODO:**
+ 
+ - Remove second folder select step - network folder should be fixed (+ run ID)
+ - Only show the first folder picker if no path has been passed via the command line.
+
 ### General usage
 
 To use the script, just double-click on the shortcut (this can be moved wherever required, as long as the W: network drive is availble). A dialogue box will open to choose the run folder you want to move, then another will open to confirm or select the folder you wish to move it to.

@@ -136,7 +136,7 @@ class SampleCoverage(object):
         2) Are above the minimum required coverage
 
         and return as a new dictionary which summarises this per gene, rather than per
-        exon/amplicon   
+        exon/amplicon
         """
         print(
             "INFO: Analysing coverage for sample {}".format(self.sampleid),
