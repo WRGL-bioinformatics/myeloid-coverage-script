@@ -12,15 +12,17 @@ sequencing run, then a  target directory, then copy files from
 the sequencing run to the backup directory.
 
 """
+
 import sys
 import tkinter as tk
 from tkinter import filedialog
 from pathlib import Path
-from shutil import copyfile, copytree
+from shutil import copytree
 
 # config is shared across multiple classes, so we load it up in its own module
 # to avoid repetition of the config parsing code
 from bin.Config import config
+from bin.QuickCopy import quickcopy
 
 
 class MyeloidTransfer(object):
@@ -117,44 +119,48 @@ class MyeloidTransfer(object):
                 # just dying and raising an exception. I doubt I will want to handle them any
                 # other way than just exiting, but I might want to add a more friendly error
                 # message.
-                copyfile(f, newfile)
+                quickcopy(f, newfile)
 
         # Copy the Sample Sheet and the AmpliconCoverage file
         # DEV: As above, this could go wrong in a few ways. Once these are known, add handlers
         # These should also go to the new alignment folder
-        copyfile(datadir / "SampleSheetUsed.csv", newrundir / "SampleSheetUsed.csv")
-        copyfile(
+        quickcopy(datadir / "SampleSheetUsed.csv", newrundir / "SampleSheetUsed.csv")
+        quickcopy(
             datadir / "SampleSheetUsed.csv", newalignmentdir / "SampleSheetUsed.csv"
         )
-        copyfile(
-            datadir / "AmpliconCoverage_M1.tsv",
-            newrundir / "AmpliconCoverage_M1.tsv",
+        quickcopy(
+            datadir / "AmpliconCoverage_M1.tsv", newrundir / "AmpliconCoverage_M1.tsv",
         )
-        copyfile(
+        quickcopy(
             datadir / "AmpliconCoverage_M1.tsv",
             newalignmentdir / "AmpliconCoverage_M1.tsv",
         )
-        copyfile(
+        quickcopy(
             datadir / "DemultiplexSummaryF1L1.txt",
             newrundir / "DemultiplexSummaryF1L1.txt",
         )
-        copyfile(
+        quickcopy(
             datadir / "DemultiplexSummaryF1L1.txt",
             newalignmentdir / "DemultiplexSummaryF1L1.txt",
         )
         # There are also a couple of MiSeq files that need to be moved (to match
         # panels, I'm not sure if they're essential for repeating this)
-        copyfile(rundir / "RunInfo.xml", newrundir / "RunInfo.xml")
-        copyfile(rundir / "RunParameters.xml", newrundir / "RunParameters.xml")
+        quickcopy(rundir / "RunInfo.xml", newrundir / "RunInfo.xml")
+        quickcopy(rundir / "RunParameters.xml", newrundir / "RunParameters.xml")
 
-        copyfile(
+        quickcopy(
             rundir / "TruSight-Myeloid-Manifest.txt",
             newrundir / "TruSight-Myeloid-Manifest.txt",
         )
 
         # Copy the InterOp folder to the backup drive
         # To copy a folder and it's files & subfolders, use shutil copytree()
-        copytree(rundir / "InterOp", newrundir / "InterOp")
+        copytree(
+            rundir / "InterOp",
+            newrundir / "InterOp",
+            dirs_exist_ok=True,
+            copy_function=quickcopy,
+        )
 
         # TODO
         # Copy the fastqs and the remaining folders so that the new data directory is
@@ -167,7 +173,7 @@ class MyeloidTransfer(object):
             for f in basecallsdir.glob("*.gz"):
                 print("INFO: Moving {}".format(f.name), file=sys.stderr)
                 newfile = newfastqdir / f.name
-                copyfile(f, newfile)
+                quickcopy(f, newfile)
 
         # Return the new run data, so we can then use that to call the coverage module
         return newdatadir
