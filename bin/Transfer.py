@@ -29,14 +29,10 @@ class MyeloidTransfer(object):
     def __init__(self, datadir: str = None):
         # Get the run folder and target folder
         print(
-            "INFO: Default source directory: {}".format(
-                config.get("directories", "source-dir")
-            )
+            f"INFO: Default source directory: {config.get('directories', 'source-dir')}"
         )
         print(
-            "INFO: Default target directory: {}".format(
-                config.get("directories", "target-dir")
-            )
+            f"INFO: Default target directory: {config.get('directories', 'target-dir')}"
         )
 
         # Get the folder details from the user
@@ -59,16 +55,15 @@ class MyeloidTransfer(object):
         Transfer the essential run files from the MiSeq run data folder to the
         backup target folder.
         """
-        print("INFO: Selected run folder: {}".format(datadir), file=sys.stderr)
-        print(
-            "INFO: Selected destination folder: {}".format(targetdir), file=sys.stderr
-        )
+        print(f"INFO: Selected run folder: {datadir}", file=sys.stderr)
+        print(f"INFO: Selected destination folder: {targetdir}", file=sys.stderr)
 
         # Extract the run ID from the data folder path
         # Since the MiSeq data directory structure is fixed, we know exactly
         # which section of the path has this, but we have to go from the end as
         # there could be changes before
         runid = datadir.parts[-5]
+        print(f"INFO: Folder run ID = {runid}", file=sys.stderr)
 
         # datadir is the alignment folder
         # For some of this we will need the BaseCalls folder above it
@@ -79,30 +74,31 @@ class MyeloidTransfer(object):
         # Create new folder in the target directory
         newrundir = targetdir / runid
         # this is the folder to hold the bams/vcfs
-        newdatadir = newrundir / "Myeloid_{}".format(config.get("general", "version"))
+        newdatadir = newrundir / f"Myeloid_{config.get('general', 'version')}"
         # For Fastq backup
         newfastqdir = newrundir / "Data" / "Intensities" / "BaseCalls"
         # non-BAM/VCF files from the Alignment folder
         newalignmentdir = newfastqdir / "Alignment"
 
-        print("INFO: Creating new folder {}".format(newdatadir), file=sys.stderr)
+        print(f"INFO: Creating new folder {newdatadir}", file=sys.stderr)
 
-        # Try to create the new runfolder
-        # Don't overwrite an existing folder - print a message and exit
+        # Try to create the new analyis folder (e.g. /Myeloid_1.2)
+        # If this already exists we want to halt - this should not be overwritten
         try:
             newdatadir.mkdir(parents=True)
-            newalignmentdir.mkdir(parents=True)
         except FileExistsError:
             print(
-                "ERROR: The run folder {} already exists".format(newdatadir),
+                "INFO: The run folder already exists, but existing files should not be replaced by this script.",
                 file=sys.stderr,
             )
-            sys.exit(1)
+        # Don't overwrite an existing analysis folder - print a message and exit
+        try:
+            # This makes the alignment folder, which will only exist if it's been previously analysed
+            # So this one *should* give an error
+            newalignmentdir.mkdir(parents=True, exist_ok=True)
         except FileNotFoundError:
             print(
-                "ERROR: Could not create folder {} due to missing or inaccessible parent".format(
-                    newdatadir
-                ),
+                f"ERROR: Could not create folder {newalignmentdir} due to missing or inaccessible parent",
                 file=sys.stderr,
             )
             sys.exit(1)
@@ -112,7 +108,7 @@ class MyeloidTransfer(object):
         # to the target directory (newdatadir)
         for filetype in config["directories"].getlist("filetypes"):
             for f in datadir.glob(filetype):
-                print("INFO: Moving {}".format(f.name), file=sys.stderr)
+                print(f"INFO: Moving {f.name}", file=sys.stderr)
                 newfile = newdatadir / f.name
 
                 # DEV: I don't know all the ways in which this might go wrong, so I'll rely on it
@@ -167,11 +163,9 @@ class MyeloidTransfer(object):
         # more in line with the setup of the panels and genotyping folder
         # Create the Data directory regardless of fast copying
         if config.getboolean("general", "copy_fastqs") == True:
-            print(
-                "INFO: Copying fastq files in {}".format(basecallsdir), file=sys.stderr
-            )
+            print(f"INFO: Copying fastq files in {basecallsdir}", file=sys.stderr)
             for f in basecallsdir.glob("*.gz"):
-                print("INFO: Moving {}".format(f.name), file=sys.stderr)
+                print(f"INFO: Moving {f.name}", file=sys.stderr)
                 newfile = newfastqdir / f.name
                 quickcopy(f, newfile)
 
