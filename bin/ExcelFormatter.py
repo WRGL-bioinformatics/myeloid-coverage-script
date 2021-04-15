@@ -76,12 +76,10 @@ class ExcelFormatter(object):
 
         # move the support footer line to just below the sample list, regardless of
         # how many samples are used
-        currentyear = datetime.datetime.now().year
-
         worksheet.write(
             len(self.outputdict.keys()) + 10,
             1,
-            f"WRGL software {currentyear}.  Contact Ben.Sanders@NHS.net for support",
+            f"WRGL software {datetime.datetime.now().year}.  Contact {config.get('general', 'admin_email'} for support",
             self.workbook.add_format({"color": "gray"}),
         )
 
