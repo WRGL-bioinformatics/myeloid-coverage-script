@@ -158,7 +158,6 @@ class MyeloidTransfer(object):
             copy_function=quickcopy,
         )
 
-        # TODO
         # Copy the fastqs and the remaining folders so that the new data directory is
         # more in line with the setup of the panels and genotyping folder
         # Create the Data directory regardless of fast copying
@@ -167,6 +166,26 @@ class MyeloidTransfer(object):
             for f in basecallsdir.glob("*.gz"):
                 print(f"INFO: Moving {f.name}", file=sys.stderr)
                 newfile = newfastqdir / f.name
+                quickcopy(f, newfile)
+
+        # If the option is set, copy the BAM files to the temporary BAM file store
+        if config.getboolean("general", "copy_bams") == True:
+            # First, create the run folder in the temp store
+            try:
+                # Add the run ID to the BAM store path
+                bamstore = Path(f"{config.get('directories', 'bam-store-dir')}\{runid}")
+                bamstore.mkdir(parents=True, exist_ok=True)
+            except FileNotFoundError:
+                print(
+                    f"ERROR: Could not create folder {bamstore} due to missing or inaccessible parent",
+                    file=sys.stderr,
+                )
+                sys.exit(1)
+        
+            # Copy the BAM and BAI files to the temp store
+            for f in datadir.glob("*.ba*"):
+                print(f"INFO: Moving {f.name} to temporary BAM store", file.sys.stderr)
+                newfile = bamstore / f.name
                 quickcopy(f, newfile)
 
         # Return the new run data, so we can then use that to call the coverage module
