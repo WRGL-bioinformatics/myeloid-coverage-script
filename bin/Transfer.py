@@ -184,7 +184,7 @@ class MyeloidTransfer(object):
 
             # Copy the BAM and BAI files to the temp store
             for f in datadir.glob("*.ba*"):
-                print(f"INFO: Moving {f.name} to temporary BAM store", file.sys.stderr)
+                print(f"INFO: Moving {f.name} to temporary BAM store", file=sys.stderr)
                 newfile = bamstore / f.name
                 quickcopy(f, newfile)
 
