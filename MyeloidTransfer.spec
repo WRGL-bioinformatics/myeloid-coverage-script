@@ -1,13 +1,13 @@
-# -*- mode: python ; coding: utf-8 -*-
+# -*- mode: python -*-
 
 block_cipher = None
 
 
 a = Analysis(['MyeloidTransfer.py'],
-             pathex=['C:\\Users\\ben\\Source\\Repos\\python_myeloid_coverage'],
+             pathex=['C:\\Users\\ben\\Documents\\Work\\python_myeloid_coverage'],
              binaries=[],
              datas=[],
-             hiddenimports=[],
+             hiddenimports=['tkinter', 'xlsxwriter'],
              hookspath=[],
              runtime_hooks=[],
              excludes=[],
@@ -19,19 +19,18 @@ pyz = PYZ(a.pure, a.zipped_data,
              cipher=block_cipher)
 exe = EXE(pyz,
           a.scripts,
+          a.binaries,
+          a.zipfiles,
+          a.datas,
           [],
-          exclude_binaries=True,
-          name='MyeloidTransfer',
+          name='Myeloid_transfer_and_coverage',
           debug=False,
           bootloader_ignore_signals=False,
           strip=False,
           upx=True,
-          console=True )
-coll = COLLECT(exe,
-               a.binaries,
-               a.zipfiles,
-               a.datas,
-               strip=False,
-               upx=True,
-               upx_exclude=[],
-               name='MyeloidTransfer')
+          runtime_tmpdir=None,
+          console=True , icon='dna.ico')
+
+		  
+import shutil
+shutil.copyfile('transfer.config', '{0}/transfer.config'.format(DISTPATH))
