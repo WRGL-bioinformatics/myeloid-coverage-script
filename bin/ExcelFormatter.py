@@ -79,7 +79,7 @@ class ExcelFormatter(object):
         worksheet.write(
             len(self.outputdict.keys()) + 10,
             1,
-            f"WRGL software {datetime.datetime.now().year}.  Contact {config.get('general', 'admin_email'} for support",
+            f"WRGL software {datetime.datetime.now().year}.  Contact {config.get('general', 'admin_email')} for support",
             self.workbook.add_format({"color": "gray"}),
         )
 
