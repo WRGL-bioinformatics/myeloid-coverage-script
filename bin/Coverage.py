@@ -33,8 +33,8 @@ class MyeloidCoverage(object):
         assert len(coveragefiles) > 0, "ERROR: No genome vcf files detected"
 
         # Load the BED file target regions
-        # DEV: It might be a good idea to edit the BedReader class to check that
-        #      it has a Path, and to convert to one if passed a Str.
+        # BED file has the full path in transfer.config, so it doesn't need to be
+        # resolved relative to the script/executable
         self.bedfile = BedReader(Path(config.get("coverage", "bedfile")))
         self.bedregions = self.bedfile.bedfile
 
