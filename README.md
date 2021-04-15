@@ -7,6 +7,10 @@ transfer the relevant run data (VCF, BAM, BAI, etc.) from the MiSeq
 runfolder to the Z: drive so it can be accessed via the Trust
 network.
 
+BAM files are now transferred directly to a temporary store in W:\Share, so that
+they can be easily accessible to all users. Exact repository path can be set in
+the config file.
+
 ## Usage
 
 ### Automated usage
