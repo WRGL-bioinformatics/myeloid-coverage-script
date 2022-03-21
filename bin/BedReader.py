@@ -29,7 +29,7 @@ class BedReader(object):
     def __init__(self, fpath):
         self.fpath = fpath
         self.fname = self.fpath.name
-        print("INFO: Reading BED file {}".format(self.fname), file=sys.stderr)
+        print(f"INFO: Reading BED file {self.fname}", file=sys.stderr)
 
         self._bedfile = self.read_bed_file()
 
@@ -77,7 +77,7 @@ class BedReader(object):
                         NAME = line[3].split("_")[0]
                         line = (CHR, START, END, NAME)
                     except IndexError:
-                        line = (CHR, START, END, "{}:{}-{}".format(CHR, START, END))
+                        line = (CHR, START, END, f"{CHR}:{START}-{END}")
 
                     # Add to the BED file list
                     bedfile.append(line)
@@ -85,8 +85,7 @@ class BedReader(object):
         # A BED file is required, so if it can't be opened quit.
         except FileNotFoundError:
             print(
-                "ERROR: Could not open essential file {}".format(self.fname),
-                file=sys.stderr,
+                f"ERROR: Could not open essential file {self.fname}", file=sys.stderr,
             )
             sys.exit(1)
 

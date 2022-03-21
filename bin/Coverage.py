@@ -22,9 +22,7 @@ class MyeloidCoverage(object):
     def __init__(self, runfolder: str):
         self.runfolder = Path(runfolder)
         print(
-            "INFO: Gathering coverage files for run {}".format(
-                self.runfolder.parts[-1]
-            ),
+            f"INFO: Gathering coverage files for run {self.runfolder.parts[-1]}",
             file=sys.stderr,
         )
 
@@ -35,8 +33,8 @@ class MyeloidCoverage(object):
         assert len(coveragefiles) > 0, "ERROR: No genome vcf files detected"
 
         # Load the BED file target regions
-        # DEV: It might be a good idea to edit the BedReader class to check that
-        #      it has a Path, and to convert to one if passed a Str.
+        # BED file has the full path in transfer.config, so it doesn't need to be
+        # resolved relative to the script/executable
         self.bedfile = BedReader(Path(config.get("coverage", "bedfile")))
         self.bedregions = self.bedfile.bedfile
 
@@ -60,9 +58,7 @@ class SampleCoverage(object):
         self.vcfpath = Path(vcf)
         # Extract just the sample ID from the genome VCF path
         self.sampleid = self.vcfpath.parts[-1].split("_")[0]
-        print(
-            "INFO: Reading coverage file for {}".format(self.sampleid), file=sys.stderr
-        )
+        print(f"INFO: Reading coverage file for {self.sampleid}", file=sys.stderr)
         # Make sure the file can be opened
         assert self.vcfpath.is_file(), "ERROR: File {} cannot be opened"
         self.bedregions = bedfile
@@ -98,8 +94,7 @@ class SampleCoverage(object):
                         # strings, while storing the others are ints
                         CHROM = line[0]
                     print(
-                        "INFO: Reading chromosome {} coverage".format(CHROM),
-                        file=sys.stderr,
+                        f"INFO: Reading chromosome {CHROM} coverage", file=sys.stderr,
                     )
 
                 # POS is the second line of the file
@@ -139,8 +134,7 @@ class SampleCoverage(object):
         exon/amplicon
         """
         print(
-            "INFO: Analysing coverage for sample {}".format(self.sampleid),
-            file=sys.stderr,
+            f"INFO: Analysing coverage for sample {self.sampleid}", file=sys.stderr,
         )
 
         # Use a new dictionary, which will store coverage details per-gene
@@ -186,15 +180,13 @@ class SampleCoverage(object):
         """
         self.outputpath = self.vcfpath.parent / "Coverage"
         self.outputpath.mkdir(exist_ok=True, parents=True)
-        outfile = self.outputpath / "{}_Coverage.txt".format(self.sampleid)
+        outfile = self.outputpath / f"{self.sampleid}_Coverage.txt"
         with outfile.open("w") as f:
 
             # Write a header for the coverage file
-            f.write("## Coverage report for sample {}\n".format(self.sampleid))
+            f.write(f"## Coverage report for sample {self.sampleid}\n")
             f.write(
-                "## Minimum depth required: {}x\n".format(
-                    config.getint("coverage", "mindepth")
-                )
+                f"## Minimum depth required: {config.getint('coverage', 'mindepth')}x\n"
             )
             f.write("#GENE\tLENGTH\tCOVERED\tPERCENTAGE\n")
 
@@ -205,7 +197,5 @@ class SampleCoverage(object):
                 percentage = (coverage / length) * 100
                 assert (
                     length >= coverage
-                ), "ERROR: {} has more coverage than length".format(gene)
-                f.write(
-                    "{}\t{}\t{}\t{:.2f}\n".format(gene, length, coverage, percentage)
-                )
+                ), f"ERROR: {gene} has more coverage than length"
+                f.write(f"{gene}\t{length}\t{coverage}\t{percentage:.2f}\n")

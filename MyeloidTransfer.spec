@@ -29,8 +29,9 @@ exe = EXE(pyz,
           strip=False,
           upx=True,
           runtime_tmpdir=None,
-          console=True , icon='dna.ico')
+          console=True , icon='static/dna.ico')
 
 		  
 import shutil
-shutil.copyfile('transfer.config', '{0}/transfer.config'.format(DISTPATH))
+shutil.copyfile('static/transfer.config', '{0}/transfer.config'.format(DISTPATH))
+shutil.copyfile('static/myeloid_exons_only.bed', f'{DISTPATH}/myeloid_exons_only.bed')

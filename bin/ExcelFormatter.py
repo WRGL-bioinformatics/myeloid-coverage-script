@@ -1,3 +1,4 @@
+import datetime
 import sys
 import xlsxwriter
 from pathlib import Path
@@ -21,13 +22,12 @@ class ExcelFormatter(object):
         self.outputpath.mkdir(exist_ok=True, parents=True)
         self.runid = self.outputpath.parts[-2]
         print(
-            "INFO: Creating coverage folder at {}".format(self.outputpath),
-            file=sys.stderr,
+            f"INFO: Creating coverage folder at {self.outputpath}", file=sys.stderr,
         )
 
         # Create an empty Excel workbook in the output folder
         self.workbook = xlsxwriter.Workbook(
-            self.outputpath / "{}_Coverage.xlsx".format(self.runid)
+            self.outputpath / f"{self.runid}_Coverage.xlsx"
         )
 
         # Write the summary/cover sheet
@@ -70,7 +70,7 @@ class ExcelFormatter(object):
         worksheet.write(
             6,
             3,
-            "{}x".format(config.get("coverage", "mindepth")),
+            f"{config.get('coverage', 'mindepth')}x",
             self.workbook.add_format({"bold": True, "color": "red", "border": 1}),
         )
 
@@ -79,7 +79,7 @@ class ExcelFormatter(object):
         worksheet.write(
             len(self.outputdict.keys()) + 10,
             1,
-            "WRGL software 2019.  Contact Ben.Sanders@NHS.net for support",
+            f"WRGL software {datetime.datetime.now().year}.  Contact {config.get('general', 'admin_email')} for support",
             self.workbook.add_format({"color": "gray"}),
         )
 
@@ -96,7 +96,7 @@ class ExcelFormatter(object):
         data folder in a "Coverage" folder.
         """
         worksheet = self.workbook.add_worksheet(sampleid)
-        print("INFO: Writing Excel report for {}".format(sampleid), file=sys.stderr)
+        print(f"INFO: Writing Excel report for {sampleid}", file=sys.stderr)
 
         # format object used to set panel headers to bold text
         header_format = self.workbook.add_format(
@@ -133,7 +133,6 @@ class ExcelFormatter(object):
                 # Calculate the percentage coverage for the current gene
                 length = self.outputdict[sample][gene][0]
                 covered = self.outputdict[sample][gene][1]
-                # coverage = "{:.2f}%".format((covered / length) * 100)
                 coverage = covered / length
 
                 # Some genes should be highlighted in bold
