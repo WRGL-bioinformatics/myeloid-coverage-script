@@ -1,3 +1,8 @@
+"""
+Author: Ben.Sanders@NHS.net
+
+Main function to run the Myeloid data transfer and coverage report generation
+"""
 import sys
 from bin.Transfer import MyeloidTransfer
 from bin.Coverage import MyeloidCoverage
@@ -11,10 +16,16 @@ if __name__ == "__main__":
     # Handle only this, so that any other errors will still raise
     except IndexError:
         print(
-            f"INFO: No target folder specified. Opening file selector...",
+            "INFO: No target folder specified. Opening file selector...",
             file=sys.stderr,
         )
-        transfer = MyeloidTransfer()
+        try:
+            transfer = MyeloidTransfer()
+        except FileNotFoundError:
+            # Message and quit if no valid folder selected
+            print("WARNING: Either no target directory selected or it does not contain an Alignment folder.",
+                  file=sys.stderr)
+            sys.exit(0)
 
     # Now process the coverage information for this run
     # Automatically writes an Excel workbook as output

@@ -1,11 +1,18 @@
+"""
+Author: Ben.Sanders@NHS.net
+
+Creates an Excel output file
+"""
+
+
 import datetime
 import sys
-import xlsxwriter
 from pathlib import Path
+import xlsxwriter
 from bin.Config import config
 
 
-class ExcelFormatter(object):
+class ExcelFormatter():
     """
     Uses the formatting options defined in ExcelGenes.py to write an Excel workbook that
     matches the current formatting of the Excel report exactly (following the scripts
@@ -22,7 +29,8 @@ class ExcelFormatter(object):
         self.outputpath.mkdir(exist_ok=True, parents=True)
         self.runid = self.outputpath.parts[-2]
         print(
-            f"INFO: Creating coverage folder at {self.outputpath}", file=sys.stderr,
+            f"INFO: Creating coverage folder at {self.outputpath}",
+            file=sys.stderr,
         )
 
         # Create an empty Excel workbook in the output folder
@@ -76,10 +84,12 @@ class ExcelFormatter(object):
 
         # move the support footer line to just below the sample list, regardless of
         # how many samples are used
+        tstamp = datetime.datetime.now().year
+        admin = config.get('general', 'admin_email')
         worksheet.write(
             len(self.outputdict.keys()) + 10,
             1,
-            f"WRGL software {datetime.datetime.now().year}.  Contact {config.get('general', 'admin_email')} for support",
+            f"WRGL software {tstamp}.  Contact {admin} for support",
             self.workbook.add_format({"color": "gray"}),
         )
 

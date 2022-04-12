@@ -1,0 +1,9 @@
+# LRM update TODO
+
+* Find where the input directory is defined - user selected and command line
+  * Ensure that this can work under LRM folder structure
+  * If not, follow the C# pipeline method of reorganising LRM to match the older structure
+  * Prefer not to need to read samplesheets, etc. to identify an LRM-style run.
+* Update so that LRM style runs are copied to the Z: as with older runs
+* Extract the LRM .vcf.gz files to standard vcf
+* Try and find why the coverage generation might be freezing - or add some logs in order to identify *where* the freeze happens.
