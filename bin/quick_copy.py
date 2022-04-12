@@ -17,7 +17,7 @@ import shutil
 def quickcopy(src, dst, follow_symlinks=True):
     """
     Use the shutil copy function, but check whether the file already exists.
-  
+
     Can be used in copytree as the copy_function to allow recursive copying
     with checking.
 

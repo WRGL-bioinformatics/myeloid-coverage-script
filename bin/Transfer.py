@@ -8,7 +8,7 @@ purpose
 -------
 
 Allow the user to select a run folder containing a myeloid
-sequencing run, then a  target directory, then copy files from 
+sequencing run, then a  target directory, then copy files from
 the sequencing run to the backup directory.
 
 """
@@ -17,15 +17,19 @@ import sys
 import tkinter as tk
 from tkinter import filedialog
 from pathlib import Path
+
 from shutil import copytree
 
 # config is shared across multiple classes, so we load it up in its own module
 # to avoid repetition of the config parsing code
 from bin.Config import config
-from bin.QuickCopy import quickcopy
+from bin.quick_copy import quickcopy
 
 
-class MyeloidTransfer(object):
+class MyeloidTransfer():
+    """
+    Handles file copy operations to move Myeloid data to the network drive.
+    """
     def __init__(self, datadir: str = None):
         # Get the run folder and target folder
         print(
@@ -56,20 +60,36 @@ class MyeloidTransfer(object):
         backup target folder.
         """
         print(f"INFO: Selected run folder: {datadir}", file=sys.stderr)
-        print(f"INFO: Selected destination folder: {targetdir}", file=sys.stderr)
+        print(f"INFO: Selected destination folder: {targetdir}",
+                                                        file=sys.stderr)
 
         # Extract the run ID from the data folder path
         # Since the MiSeq data directory structure is fixed, we know exactly
         # which section of the path has this, but we have to go from the end as
         # there could be changes before
-        runid = datadir.parts[-5]
-        print(f"INFO: Folder run ID = {runid}", file=sys.stderr)
 
-        # datadir is the alignment folder
-        # For some of this we will need the BaseCalls folder above it
-        basecallsdir = datadir.parent
-        # And for some we will need the root run folder
-        rundir = basecallsdir.parent.parent.parent
+        # DEV: There are some pretty major structure changes between MSR and LRM
+        #      runs in the runid, basecallsdir and especially the rundir
+        #      There will need to be a check to identify LRM runs and them do 
+
+        if "Alignment_" in datadir.parts[-2]:
+            print("INFO: Path suggests LRM-style run.")
+            runid = datadir.parts[-3]
+            # datadir is the alignment folder
+            # For some of this we will need the BaseCalls folder above it
+            basecallsdir = datadir / "Fastq"
+            # And for some we will need the root run folder
+            rundir = datadir.parent.parent
+        else:
+            print("INFO: Path suggests older MSR-style run.")
+            runid = datadir.parts[-5]
+            # datadir is the alignment folder
+            # For some of this we will need the BaseCalls folder above it
+            basecallsdir = datadir.parent
+            # And for some we will need the root run folder
+            rundir = datadir.parent.parent.parent.parent
+
+        print(f"INFO: Folder run ID = {runid}", file=sys.stderr)
 
         # Create new folder in the target directory
         newrundir = targetdir / runid
@@ -83,7 +103,7 @@ class MyeloidTransfer(object):
         print(f"INFO: Creating new folder {newdatadir}", file=sys.stderr)
 
         # Try to create the new analyis folder (e.g. /Myeloid_1.2)
-        # If this already exists we want to halt - this should not be overwritten
+        # If this already exists we want to halt - should not be overwritten
         try:
             newdatadir.mkdir(parents=True)
         except FileExistsError:
@@ -93,8 +113,8 @@ class MyeloidTransfer(object):
             )
         # Don't overwrite an existing analysis folder - print a message and exit
         try:
-            # This makes the alignment folder, which will only exist if it's been previously analysed
-            # So this one *should* give an error
+            # This makes the alignment folder, which will only exist if it's
+            # been previously analysed so this one *should* give an error
             newalignmentdir.mkdir(parents=True, exist_ok=True)
         except FileNotFoundError:
             print(
@@ -104,42 +124,49 @@ class MyeloidTransfer(object):
             sys.exit(1)
 
         # Use the list of file types in the config file and glob all matching
-        # files in the data directory, then use shutil.copyfile to copy (NOT move)
-        # to the target directory (newdatadir)
+        # files in the data directory, then use shutil.copyfile to copy
+        # (NOT move) to the target directory (newdatadir)
         for filetype in config["directories"].getlist("filetypes"):
-            for f in datadir.glob(filetype):
-                print(f"INFO: Moving {f.name}", file=sys.stderr)
-                newfile = newdatadir / f.name
+            for oldfile in datadir.glob(filetype):
+                print(f"INFO: Moving {oldfile.name}", file=sys.stderr)
+                newfile = newdatadir / oldfile.name
 
-                # DEV: I don't know all the ways in which this might go wrong, so I'll rely on it
-                # just dying and raising an exception. I doubt I will want to handle them any
-                # other way than just exiting, but I might want to add a more friendly error
+                # DEV: I don't know all the ways in which this might go wrong,
+                # so I'll rely on it just dying and raising an exception.
+                # I doubt I will want to handle them any other way than just
+                # exiting, but I might want to add a more friendly error
                 # message.
-                quickcopy(f, newfile)
+                quickcopy(oldfile, newfile)
 
         # Copy the Sample Sheet and the AmpliconCoverage file
-        # DEV: As above, this could go wrong in a few ways. Once these are known, add handlers
-        # These should also go to the new alignment folder
+        # DEV: As above, this could go wrong in a few ways. Once these are
+        # known, add handlers These should also go to the new alignment folder
         quickcopy(datadir / "SampleSheetUsed.csv", newrundir / "SampleSheetUsed.csv")
         quickcopy(
             datadir / "SampleSheetUsed.csv", newalignmentdir / "SampleSheetUsed.csv"
         )
         quickcopy(
-            datadir / "AmpliconCoverage_M1.tsv", newrundir / "AmpliconCoverage_M1.tsv",
+            datadir / "AmpliconCoverage_M1.tsv",
+            newrundir / "AmpliconCoverage_M1.tsv",
         )
         quickcopy(
             datadir / "AmpliconCoverage_M1.tsv",
             newalignmentdir / "AmpliconCoverage_M1.tsv",
         )
-        quickcopy(
-            datadir / "DemultiplexSummaryF1L1.txt",
-            newrundir / "DemultiplexSummaryF1L1.txt",
-        )
-        quickcopy(
-            datadir / "DemultiplexSummaryF1L1.txt",
-            newalignmentdir / "DemultiplexSummaryF1L1.txt",
-        )
-        # There are also a couple of MiSeq files that need to be moved (to match
+        # DEV: This file does not exist in LRM runs - handle missing
+        try:
+            quickcopy(
+                datadir / "DemultiplexSummaryF1L1.txt",
+                newrundir / "DemultiplexSummaryF1L1.txt",
+            )
+            quickcopy(
+                datadir / "DemultiplexSummaryF1L1.txt",
+                newalignmentdir / "DemultiplexSummaryF1L1.txt",
+            )
+        except FileNotFoundError:
+            # These files don't exist in LRM-style runs
+            pass
+        # There are also a couple of MiSeq files to be moved (to match
         # panels, I'm not sure if they're essential for repeating this)
         quickcopy(rundir / "RunInfo.xml", newrundir / "RunInfo.xml")
         quickcopy(rundir / "RunParameters.xml", newrundir / "RunParameters.xml")
@@ -158,22 +185,23 @@ class MyeloidTransfer(object):
             copy_function=quickcopy,
         )
 
-        # Copy the fastqs and the remaining folders so that the new data directory is
-        # more in line with the setup of the panels and genotyping folder
-        # Create the Data directory regardless of fast copying
-        if config.getboolean("general", "copy_fastqs") == True:
+        # Copy the fastqs and the remaining folders so that the new data
+        # directory is more in line with the setup of the panels and genotyping
+        # folder. Create the Data directory regardless of fast copying
+        if config.getboolean("general", "copy_fastqs"):
             print(f"INFO: Copying fastq files in {basecallsdir}", file=sys.stderr)
-            for f in basecallsdir.glob("*.gz"):
-                print(f"INFO: Moving {f.name}", file=sys.stderr)
-                newfile = newfastqdir / f.name
-                quickcopy(f, newfile)
+            for oldfile in basecallsdir.glob("*.fastq.gz"):
+                print(f"INFO: Moving {oldfile.name}", file=sys.stderr)
+                newfile = newfastqdir / oldfile.name
+                quickcopy(oldfile, newfile)
 
-        # If the option is set, copy the BAM files to the temporary BAM file store
-        if config.getboolean("general", "copy_bams") == True:
+        # If the option is set, copy the BAM files to the temporary BAM file
+        # store
+        if config.getboolean("general", "copy_bams"):
             # First, create the run folder in the temp store
             try:
                 # Add the run ID to the BAM store path
-                bamstore = Path(f"{config.get('directories', 'bam-store-dir')}\{runid}")
+                bamstore = Path(f"{config.get('directories', 'bam-store-dir')}\\{runid}")
                 bamstore.mkdir(parents=True, exist_ok=True)
             except FileNotFoundError:
                 print(
@@ -183,12 +211,15 @@ class MyeloidTransfer(object):
                 sys.exit(1)
 
             # Copy the BAM and BAI files to the temp store
-            for f in datadir.glob("*.ba*"):
-                print(f"INFO: Moving {f.name} to temporary BAM store", file=sys.stderr)
-                newfile = bamstore / f.name
-                quickcopy(f, newfile)
+            for oldfile in datadir.glob("*.ba*"):
+                print(f"INFO: Moving {oldfile.name} to temporary BAM store",
+                      file=sys.stderr
+                     )
+                newfile = bamstore / oldfile.name
+                quickcopy(oldfile, newfile)
 
-        # Return the new run data, so we can then use that to call the coverage module
+        # Return the new run data, so we can then use that to call the coverage
+        # module
         return newdatadir
 
     @staticmethod
@@ -202,7 +233,7 @@ class MyeloidTransfer(object):
 
         # If there is no datadir given, open a file picker to allow the user to
         # to choose.
-        if datadir == None:
+        if not datadir:
             root = tk.Tk()
 
             # Select the source run folder
@@ -211,9 +242,9 @@ class MyeloidTransfer(object):
                 initialdir=config.get("directories", "source-dir"),
             )
 
-            # If the dialogue is closed, the program will raise an exception and a
-            # confusing error. Instead, display a simple message and quit more
-            # gracefully.
+            # If the dialogue is closed, the program will raise an exception
+            # and a confusing error. Instead, display a simple message and quit
+            # more gracefully.
             try:
                 rootdir = Path(root.filename)
             except TypeError:
@@ -222,19 +253,36 @@ class MyeloidTransfer(object):
 
             root.withdraw()
 
-            datadir = rootdir / "Data" / "Intensities" / "BaseCalls" / "Alignment"
+            datadir = rootdir/"Data"/"Intensities"/"BaseCalls"/"Alignment"
 
         # Ensure that the data directory is a Path object
         datadir = Path(datadir)
 
         # Ensure that the Alignment folder exists within the run folder.
-        # If it doesn't, the sequencing may not yet be complete.
+        # If it doesn't, the sequencing may not yet be complete, or it may
+        # be a more recent LRM-style run. Check this first, then error if still
+        # not found
         if not datadir.is_dir():
-            print(
-                "ERROR: Target directory does not have an 'Alignment' folder",
-                file=sys.stderr,
-            )
-            sys.exit(1)
+            # For an LRM run, find the first analyis and the first repeat of
+            # that analysis - this would be tricky to do any other way right
+            # now. Best option might be to check for BAM files in the folder,
+            # so the user can manually select the analysis they want, rather
+            # than only selecting the run folder?
+
+            # Get the latest alignment folder (e.g. most recent settings in 
+            # case of a re-analysis)
+            datadirs = rootdir.glob("Alignment_*")
+            datadir = [x for x in datadirs][-1]
+            # Get the latest subfolder (i.e. re-analysis with the same settings)
+            subfolders = [folder for folder in datadir.iterdir() if folder.is_dir()]
+            datadir = subfolders[-1]
+
+            if not datadir.is_dir():
+                print(
+                    "ERROR: Target directory does not have an 'Alignment' folder",
+                    file=sys.stderr,
+                )
+                sys.exit(1)
 
         # Set the destination folder
         networkdir = config.get("directories", "target-dir")

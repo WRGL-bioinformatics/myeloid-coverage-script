@@ -3,7 +3,7 @@
 block_cipher = None
 
 
-a = Analysis(['MyeloidTransfer.py'],
+a = Analysis(['myeloid_transfer.py'],
              pathex=['C:\\Users\\ben\\Documents\\Work\\python_myeloid_coverage'],
              binaries=[],
              datas=[],
